@@ -1,0 +1,18 @@
+version: 2.1
+jobs:
+    build-dist:
+        docker:
+            - image: node:12.16-alpine
+        steps:
+            - checkout
+            - run: npm install
+            - run: npm run production
+            - run: git config user.email "ribeiro.breno@gmail.com"
+            - run: git config user.name "Circle CI build"
+            - run: git add .
+            - run: git commit -m 'Update userscript build - CircleCI'
+            - run: git push -q
+workflows:
+    build-release:
+        jobs:
+            - build-dist
