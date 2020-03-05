@@ -1,9 +1,6 @@
 version: 2.1
 jobs:
     build-dist:
-        branches:
-            only:
-                - master
         docker:
             - image: circleci/node:12.16
         steps:
@@ -18,4 +15,9 @@ jobs:
 workflows:
     build-release:
         jobs:
-            - build-dist
+            - build-dist:
+                filters:
+                    branches:
+                        only:
+                            - master
+        
