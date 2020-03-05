@@ -15,4 +15,9 @@ jobs:
 workflows:
     build-release:
         jobs:
-            - build-dist
+            - build-dist:
+                filters:
+                    branches:
+                        only:
+                            - master
+        
