@@ -2,7 +2,7 @@ version: 2.1
 jobs:
     build-dist:
         docker:
-            - image: node:12.16-alpine
+            - image: circleci/node:12.16
         steps:
             - checkout
             - run: npm install
