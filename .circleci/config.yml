@@ -10,7 +10,7 @@ jobs:
             - run: git config user.email "ribeiro.breno@gmail.com"
             - run: git config user.name "Circle CI build"
             - run: git add .
-            - run: git commit -m 'Update userscript build - CircleCI'
+            - run: git commit -m '[skip ci] Update userscript build - CircleCI'
             - run: git push -q
 workflows:
     build-release:
