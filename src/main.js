@@ -2,7 +2,11 @@
     'use strict';
 
     var clicked = false,
-        el = document.createElement('div');
+        el = document.createElement('div'),
+        btn = document.getElementById('quest_button'),
+        dst = document.getElementById("quest_destination"),
+        eat = document.getElementById("eat");
+
     el.style = 'position:fixed;top:0;border:1px solid #080;background-color:#8F8;color:#030;padding:.125em .25em;text-align:center;font-family:SFMono-Regular,Consolas,"Liberation Mono",Menlo,monospace;';
     el.innerHTML = 'HP soon!';
     document.body.appendChild(el);
@@ -14,10 +18,6 @@
     }
 
     function loop() {
-        var btn = document.getElementById('quest_button'),
-            dst = document.getElementById("quest_destination"),
-            eat = document.getElementById("eat");
-
         if (btn && dst && dst.selectedIndex > -1 && !btn.disabled) {
             if (clicked) {
                 clicked = false;
