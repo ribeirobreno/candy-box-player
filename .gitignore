@@ -37,6 +37,10 @@ vendor/*
 node_modules/*
 /composer.phar
 
+# Build
+# We don't need this file right now.
+mix-manifest.json
+
 # OS Junk
 Thumbs.db
 [Dd]esktop.ini

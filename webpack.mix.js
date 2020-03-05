@@ -23,8 +23,7 @@ mix.js('src/main.js', './intermediate.user.js')
         });
 
         intFile.pipe(resFile);
-    })
-    .combine(['./Play-Candy-Box.meta.js', './Play-Candy-Box.user.js'], './Play-Candy-Box.user.js');
+    });
 
 // Full API
 // mix.js(src, output);
