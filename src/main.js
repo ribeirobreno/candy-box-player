@@ -3,6 +3,7 @@
 
     var clicked = false,
         requiredRuns = 1,
+        tif = 1000/60,
         el = document.createElement('div'),
         btn = document.getElementById('quest_button'),
         dst = document.getElementById("quest_destination"),
@@ -19,13 +20,17 @@
         return getQuestData().things[getQuestData().getCharacterIndex()];
     }
     function getCurrentHP() {
-        return getCharData().hp;
+        let data = getCharData();
+        return (data && data.hp) ? data.hp : 0;
     }
     function getMaxHP() {
         return getQuestData().getCharacterMaxHp();
     }
     function hasWeapon() {
-        return getCharData().weapon != 'none';
+        return unsafeWindow.sword.name != 'none';
+    }
+    function hasShop() {
+        return unsafeWindow.shop.shown;
     }
 
     function draw() {
@@ -72,9 +77,9 @@
             dst.selectedIndex = 0;
         }
 
-        setTimeout(loop, 1000/60);
+        setTimeout(loop, tif);
     }
 
-    setTimeout(loop, 1000/60);
+    setTimeout(loop, tif);
     requestAnimationFrame(draw);
 })(unsafeWindow);
