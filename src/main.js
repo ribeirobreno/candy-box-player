@@ -57,6 +57,15 @@
 
             btn.dispatchEvent(new Event('click'));
             clicked = true;
+        } else {
+            let buySword = document.querySelectorAll('#sword_with_button button');
+            if (buySword && buySword.length) {
+                buySword.forEach((el) => {
+                    if (!el.disabled) {
+                        el.dispatchEvent(new Event('click'));
+                    }
+                });
+            }
         }
 
         if (dst && dst.selectedIndex < 0) {
