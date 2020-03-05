@@ -1,4 +1,4 @@
-(function(unsafeWindow) {
+(function(unsafeWindow, document) {
     'use strict';
 
     var clicked = false,
@@ -82,4 +82,4 @@
 
     setTimeout(loop, tif);
     requestAnimationFrame(draw);
-})(unsafeWindow);
+})(unsafeWindow, document);
