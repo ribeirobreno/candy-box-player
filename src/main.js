@@ -1,4 +1,4 @@
-(function() {
+(function(unsafeWindow) {
     'use strict';
 
     var clicked = false,
@@ -12,17 +12,33 @@
     el.innerHTML = 'HP soon!';
     document.body.appendChild(el);
 
+    function getQuestData() {
+        return unsafeWindow.quest;
+    }
+    function getCharData() {
+        return getQuestData().things[getQuestData().getCharacterIndex()];
+    }
+    function getCurrentHP() {
+        return getCharData().hp;
+    }
+    function getMaxHP() {
+        return getQuestData().getCharacterMaxHp();
+    }
+    function hasWeapon() {
+        return getCharData().weapon != 'none';
+    }
+
     function draw() {
-        el.innerHTML = unsafeWindow.quest.getCharacterMaxHp();
+        el.innerHTML = getCurrentHP() + '/' + getMaxHP();
 
         requestAnimationFrame(draw);
     }
 
     function loop() {
-        if (btn && dst && dst.selectedIndex > -1 && !btn.disabled) {
+        if (btn && dst && dst.selectedIndex > -1 && !btn.disabled && hasWeapon()) {
             if (clicked) {
                 clicked = false;
-                if (unsafeWindow.quest.things[unsafeWindow.quest.getCharacterIndex()].hp) {
+                if (getCurrentHP()) {
                     if (dst.options.length > (dst.selectedIndex + 1)) {
                         if (--requiredRuns < 1) {
                             requiredRuns = 1;
@@ -32,9 +48,9 @@
                 } else if (dst.selectedIndex > 0) {
                     --dst.selectedIndex;
                     requiredRuns += 5;
-                    if (unsafeWindow.quest.getCharacterMaxHp() < (Number.MAX_SAFE_INTEGER/2) && eat) {
+                    if (getMaxHP() < (Number.MAX_SAFE_INTEGER/2) && eat) {
                         eat.dispatchEvent(new Event('click'));
-                        el.innerHTML = unsafeWindow.quest.getCharacterMaxHp();
+                        el.innerHTML = getCurrentHP() + '/' + getMaxHP();
                     }
                 }
             }
@@ -52,4 +68,4 @@
 
     setTimeout(loop, 1000/60);
     requestAnimationFrame(draw);
-})();
+})(unsafeWindow);
