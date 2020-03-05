@@ -2,6 +2,7 @@
     'use strict';
 
     var clicked = false,
+        requiredRuns = 1,
         el = document.createElement('div'),
         btn = document.getElementById('quest_button'),
         dst = document.getElementById("quest_destination"),
@@ -23,10 +24,14 @@
                 clicked = false;
                 if (unsafeWindow.quest.things[unsafeWindow.quest.getCharacterIndex()].hp) {
                     if (dst.options.length > (dst.selectedIndex + 1)) {
-                        ++dst.selectedIndex;
+                        if (--requiredRuns < 1) {
+                            requiredRuns = 1;
+                            ++dst.selectedIndex;
+                        }
                     }
                 } else if (dst.selectedIndex > 0) {
                     --dst.selectedIndex;
+                    requiredRuns += 5;
                     if (unsafeWindow.quest.getCharacterMaxHp() < (Number.MAX_SAFE_INTEGER/2) && eat) {
                         eat.dispatchEvent(new Event('click'));
                         el.innerHTML = unsafeWindow.quest.getCharacterMaxHp();
