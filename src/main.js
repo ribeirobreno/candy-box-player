@@ -86,6 +86,15 @@
                     }
                 });
             }
+
+            let upgradeSword = document.querySelectorAll('#map button');
+            if (upgradeSword && upgradeSword.length) {
+                upgradeSword.forEach((el) => {
+                    if (!el.disabled && /^Sword, better sword !.+/.test(el.innerHTML)) {
+                        el.dispatchEvent(new Event('click'));
+                    }
+                });
+            }
         }
 
         if (dst && getCurrentQuest() < 0) {
