@@ -1,20 +1,28 @@
 (function(unsafeWindow, document) {
     'use strict';
 
+    const RUNS_REF = 5,
+        TIME_BETWEEN_ITERATIONS = 1000/60;
+
     var clicked = false,
-        requiredRuns = 1,
-        tif = 1000/60,
+        requiredRuns = RUNS_REF,
         el = document.createElement('div'),
         btn = document.getElementById('quest_button'),
         dst = document.getElementById("quest_destination"),
         eat = document.getElementById("eat");
 
     el.style = 'position:fixed;top:0;border:1px solid #080;background-color:#8F8;color:#030;padding:.125em .25em;text-align:center;font-family:SFMono-Regular,Consolas,"Liberation Mono",Menlo,monospace;';
-    el.innerHTML = 'HP soon!';
+    el.innerHTML = 'Soon!';
     document.body.appendChild(el);
 
     function getQuestData() {
         return unsafeWindow.quest;
+    }
+    function getTotalQuestsAvailable() {
+        return (dst && dst.options) ? dst.options.length : 0;
+    }
+    function getCurrentQuest() {
+        return dst ? dst.selectedIndex : -1;
     }
     function getCharData() {
         return getQuestData().things[getQuestData().getCharacterIndex()];
@@ -33,29 +41,36 @@
         return unsafeWindow.shop.shown;
     }
 
+    function createPanelHTML() {
+        return getCurrentHP() + '/' + getMaxHP() +
+            '<br>Quest: ' + (getCurrentQuest() + 1) +
+            '/' + getTotalQuestsAvailable() +
+            '<br>Runs left: ' + requiredRuns;
+    }
+
     function draw() {
-        el.innerHTML = getCurrentHP() + '/' + getMaxHP();
+        el.innerHTML = createPanelHTML();
 
         requestAnimationFrame(draw);
     }
 
     function loop() {
-        if (btn && dst && dst.selectedIndex > -1 && !btn.disabled && hasWeapon()) {
+        if (btn && dst && getCurrentQuest() > -1 && !btn.disabled && hasWeapon()) {
             if (clicked) {
                 clicked = false;
                 if (getCurrentHP()) {
-                    if (dst.options.length > (dst.selectedIndex + 1)) {
+                    if (getTotalQuestsAvailable() > (getCurrentQuest() + 1)) {
                         if (--requiredRuns < 1) {
-                            requiredRuns = 1;
+                            requiredRuns = RUNS_REF;
                             ++dst.selectedIndex;
                         }
                     }
-                } else if (dst.selectedIndex > 0) {
+                } else if (getCurrentQuest() > 0) {
                     --dst.selectedIndex;
-                    requiredRuns += 5;
+                    requiredRuns += RUNS_REF;
                     if (getMaxHP() < (Number.MAX_SAFE_INTEGER/2) && eat) {
                         eat.dispatchEvent(new Event('click'));
-                        el.innerHTML = getCurrentHP() + '/' + getMaxHP();
+                        el.innerHTML = createPanelHTML();
                     }
                 }
             }
@@ -73,13 +88,13 @@
             }
         }
 
-        if (dst && dst.selectedIndex < 0) {
+        if (dst && getCurrentQuest() < 0) {
             dst.selectedIndex = 0;
         }
 
-        setTimeout(loop, tif);
+        setTimeout(loop, TIME_BETWEEN_ITERATIONS);
     }
 
-    setTimeout(loop, tif);
+    setTimeout(loop, TIME_BETWEEN_ITERATIONS);
     requestAnimationFrame(draw);
 })(unsafeWindow, document);
