@@ -2,19 +2,34 @@
     'use strict';
 
     const RUNS_REF = 5,
+        HUT_COUNTER_WAIT = 36000,
         TIME_BETWEEN_ITERATIONS = 1000/60;
 
     var clicked = false,
         requiredRuns = RUNS_REF,
+        hutCounter = HUT_COUNTER_WAIT,
         el = document.createElement('div'),
         btn = document.getElementById('quest_button'),
         dst = document.getElementById("quest_destination"),
         eat = document.getElementById("eat");
 
-    el.style = 'position:fixed;top:0;border:1px solid #080;background-color:#8F8;color:#030;padding:.125em .25em;text-align:center;font-family:SFMono-Regular,Consolas,"Liberation Mono",Menlo,monospace;';
+    el.style = 'position:fixed;bottom:.5em;right:.5em;border:1px solid #080;background-color:#8F8;color:#030;padding:.125em .25em;text-align:center;font-family:SFMono-Regular,Consolas,"Liberation Mono",Menlo,monospace;';
     el.innerHTML = 'Soon!';
     document.body.appendChild(el);
 
+    function shouldHut() {
+        if (
+            unsafeWindow.lollipops &&
+            unsafeWindow.lollipops.nbrOwned > 40000 &&
+            hutCounter > 0
+        ) {
+            --hutCounter;
+        } else {
+            hutCounter = HUT_COUNTER_WAIT;
+        }
+
+        return hutCounter < 1;
+    }
     function getQuestData() {
         return unsafeWindow.quest;
     }
@@ -45,7 +60,8 @@
         return getCurrentHP() + '/' + getMaxHP() +
             '<br>Quest: ' + (getCurrentQuest() + 1) +
             '/' + getTotalQuestsAvailable() +
-            '<br>Runs left: ' + requiredRuns;
+            '<br>Runs left: ' + requiredRuns +
+            '<br>Hut: ' + hutCounter + '/' + HUT_COUNTER_WAIT;
     }
 
     function draw() {
@@ -78,7 +94,8 @@
             btn.dispatchEvent(new Event('click'));
             clicked = true;
         } else {
-            let buySword = document.querySelectorAll('#sword_with_button button');
+            let buySword = document.querySelectorAll('#sword_with_button button'),
+                hut = document.getElementById('go_to_hut');
             if (buySword && buySword.length) {
                 buySword.forEach((el) => {
                     if (!el.disabled) {
@@ -87,13 +104,22 @@
                 });
             }
 
-            let upgradeSword = document.querySelectorAll('#map button');
-            if (upgradeSword && upgradeSword.length) {
-                upgradeSword.forEach((el) => {
-                    if (!el.disabled && /^Sword, better sword !.+/.test(el.innerHTML)) {
-                        el.dispatchEvent(new Event('click'));
-                    }
-                });
+            if (hut) {
+                if (shouldHut()) {
+                    hut.dispatchEvent(new Event('click'));
+                }
+
+                let mapButtons = document.querySelectorAll('#map button');
+                if (mapButtons && mapButtons.length) {
+                    mapButtons.forEach((el) => {
+                        if (
+                            !el.disabled &&
+                            /^(Sword, better sword|Candies, faster candies) !.+/.test(el.innerHTML)
+                        ) {
+                            el.dispatchEvent(new Event('click'));
+                        }
+                    });
+                }
             }
         }
 
