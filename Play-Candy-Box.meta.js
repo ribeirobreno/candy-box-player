@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Play Candy Box
 // @namespace    http://ribeirobreno.com.br/
-// @version      0.11.1
+// @version      0.12.0
 // @updateURL    https://github.com/ribeirobreno/candy-box-player/raw/master/Play-Candy-Box.meta.js
 // @downloadURL  https://github.com/ribeirobreno/candy-box-player/raw/master/Play-Candy-Box.user.js
 // @description  Automate some tasks from the first Candy Box game.

@@ -33,6 +33,40 @@
     function getQuestData() {
         return unsafeWindow.quest;
     }
+    function isInQuest() {
+        return getQuestData().weAreQuestingRightNow || false;
+    }
+    function isThingPresent(text, type) {
+        const things = getQuestData().things || [],
+            t = things.length;
+        let thing = {};
+
+        for (thing of things) {
+            if (
+                thing.type === type &&
+                thing.text === text
+            ) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+    function isMobPresent(text) {
+        return isThingPresent(text, 'mob');
+    }
+    function isAllyPresent(text) {
+        return isThingPresent(text, 'ally');
+    }
+    function potionCount(name) {
+        const potions = unsafeWindow.potions;
+        return (
+            potions &&
+            potions.list &&
+            potions.list[name] &&
+            potions.list[name].nbrOwned
+        ) ? potions.list[name].nbrOwned : 0;
+    }
     function getTotalQuestsAvailable() {
         return (dst && dst.options) ? dst.options.length : 0;
     }
@@ -53,7 +87,7 @@
         return unsafeWindow.sword.name != 'none';
     }
     function hasShop() {
-        return unsafeWindow.shop.shown;
+        return unsafeWindow.shop && unsafeWindow.shop.shown;
     }
 
     function createPanelHTML() {
@@ -61,7 +95,7 @@
             '<br>Quest: ' + (getCurrentQuest() + 1) +
             '/' + getTotalQuestsAvailable() +
             '<br>Runs left: ' + requiredRuns +
-            '<br>Hut: ' + hutCounter + '/' + HUT_COUNTER_WAIT;
+            '<br>Hut: ' + (100 * hutCounter / HUT_COUNTER_WAIT).toFixed(3) + '%';
     }
 
     function draw() {
@@ -104,6 +138,13 @@
                 });
             }
 
+            if (hasShop() && potionCount('impInvocationScroll') < 2) {
+                let buyScroll = document.getElementById('buy_scroll');
+                if (buyScroll && !buyScroll.disabled) {
+                    buyScroll.dispatchEvent(new Event('click'));
+                }
+            }
+
             if (hut) {
                 if (shouldHut()) {
                     hut.dispatchEvent(new Event('click'));
@@ -115,6 +156,20 @@
                         if (
                             !el.disabled &&
                             /^(Sword, better sword|Candies, faster candies) !.+/.test(el.innerHTML)
+                        ) {
+                            el.dispatchEvent(new Event('click'));
+                        }
+                    });
+                }
+            }
+
+            if (isInQuest() && isMobPresent('GHO') && !isAllyPresent('IMP')) {
+                let potionButtons = document.querySelectorAll('#quest_potions button');
+                if (potionButtons && potionButtons.length) {
+                    potionButtons.forEach((el) => {
+                        if (
+                            !el.disabled &&
+                            /^Imp invocation scroll.+/.test(el.innerHTML)
                         ) {
                             el.dispatchEvent(new Event('click'));
                         }
