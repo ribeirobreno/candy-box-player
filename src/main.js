@@ -116,7 +116,7 @@
                         }
                     }
                 } else if (getCurrentQuest() > 0) {
-                    --dst.selectedIndex;
+                    dst.selectedIndex = 0;
                     requiredRuns += RUNS_REF;
                     if (getMaxHP() < (Number.MAX_SAFE_INTEGER/2) && eat) {
                         eat.dispatchEvent(new Event('click'));
@@ -172,6 +172,7 @@
                             /^Imp invocation scroll.+/.test(el.innerHTML)
                         ) {
                             el.dispatchEvent(new Event('click'));
+                            requiredRuns = 1;
                         }
                     });
                 }
