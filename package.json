@@ -25,6 +25,7 @@
   },
   "homepage": "https://github.com/ribeirobreno/candy-box-player#readme",
   "dependencies": {
+    "collect.js": "^4.20.3",
     "laravel-mix": "^5.0.1"
   },
   "devDependencies": {
