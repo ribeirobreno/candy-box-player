@@ -13,6 +13,7 @@ nbbuild/
 nbdist/
 .nb-gradle/
 .vscode/
+.vs/
 *.code-workspace
 
 # Tools
