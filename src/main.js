@@ -140,7 +140,7 @@
 
             if (hasShop() && potionCount('impInvocationScroll') < 2) {
                 let buyScroll = document.getElementById('buy_scroll');
-                if (buyScroll && !buyScroll.disabled) {
+                if (buyScroll && !buyScroll.disabled && getComputedStyle(buyScroll, null).getPropertyValue('visibility') !== 'hidden') {
                     buyScroll.dispatchEvent(new Event('click'));
                 }
             }
