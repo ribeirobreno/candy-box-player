@@ -89,6 +89,9 @@
     function hasShop() {
         return unsafeWindow.shop && unsafeWindow.shop.shown;
     }
+    function hasMagicianHat() {
+        return unsafeWindow.objects && unsafeWindow.objects.list && unsafeWindow.objects.list.magicianHat.have;
+    }
     function getLollipopsPlanted() {
         return (unsafeWindow.farm && unsafeWindow.farm.lollipopsPlanted) ? unsafeWindow.farm.lollipopsPlanted : 0;
     }
@@ -142,7 +145,7 @@
                 });
             }
 
-            if (hasShop() && potionCount('impInvocationScroll') < 2) {
+            if (hasShop() && potionCount('impInvocationScroll') < 2 && hasMagicianHat()) {
                 let buyScroll = document.getElementById('buy_scroll');
                 if (buyScroll && !buyScroll.disabled && getComputedStyle(buyScroll, null).getPropertyValue('visibility') !== 'hidden') {
                     buyScroll.dispatchEvent(new Event('click'));
