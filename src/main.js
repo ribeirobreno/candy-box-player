@@ -89,6 +89,9 @@
     function hasShop() {
         return unsafeWindow.shop && unsafeWindow.shop.shown;
     }
+    function getLollipopsPlanted() {
+        return (unsafeWindow.farm && unsafeWindow.farm.lollipopsPlanted) ? unsafeWindow.farm.lollipopsPlanted : 0;
+    }
 
     function createPanelHTML() {
         return getCurrentHP() + '/' + getMaxHP() +
@@ -129,6 +132,7 @@
             clicked = true;
         } else {
             let buySword = document.querySelectorAll('#sword_with_button button'),
+                plant = document.getElementById('plant_1_lp'),
                 hut = document.getElementById('go_to_hut');
             if (buySword && buySword.length) {
                 buySword.forEach((el) => {
@@ -143,6 +147,10 @@
                 if (buyScroll && !buyScroll.disabled && getComputedStyle(buyScroll, null).getPropertyValue('visibility') !== 'hidden') {
                     buyScroll.dispatchEvent(new Event('click'));
                 }
+            }
+
+            if (plant && !plant.disabled && getLollipopsPlanted() < 17402) {
+                plant.dispatchEvent(new Event('click'));
             }
 
             if (hut) {
