@@ -170,7 +170,6 @@
                     requiredRuns += RUNS_REF;
                     if (getMaxHP() < (Number.MAX_SAFE_INTEGER / 2) && eat) {
                         doClick(eat);
-                        el.innerHTML = createPanelHTML();
                     }
                 }
             }
@@ -226,29 +225,36 @@
                     });
                 }
             }
-            let potionButtons = document.querySelectorAll('#quest_potions button');
-            if (isInQuest() && potionButtons && potionButtons.length) {
-                potionButtons.forEach((el) => {
-                    if (!el.disabled) {
-                        let btnText = el.innerHTML;
-                        if (
-                            /^Imp invocation scroll.+/.test(btnText) && isMobPresent('GHO') && !isAllyPresent('IMP')
-                        ) {
-                            doClick(el);
-                            requiredRuns = 1;
-                        } else if (
-                            (
-                                /^Fire scroll.+/.test(btnText) && isNextThingAMob() && getNextThingHP() > 100
-                            ) || (
-                                /^Teleport scroll.+/.test(btnText) && isNextThingAMob() && getNextThingHP() > getCurrentHP() && getHPMissing() > 50
-                            ) || (
-                                /^Health potion.+/.test(btnText) && getHPMissing() > 50 && sumMobsHP() >= getCurrentHP()
-                            )
-                        ) {
-                            doClick(el);
+
+            if (isInQuest()) {
+                if (eat && isNextThingAMob() && getNextThingMaxHP() > getMaxHP()) {
+                    doClick(eat);
+                }
+
+                let potionButtons = document.querySelectorAll('#quest_potions button');
+                if (potionButtons && potionButtons.length) {
+                    potionButtons.forEach((el) => {
+                        if (!el.disabled) {
+                            let btnText = el.innerHTML;
+                            if (
+                                /^Imp invocation scroll.+/.test(btnText) && isMobPresent('GHO') && !isAllyPresent('IMP')
+                            ) {
+                                doClick(el);
+                                requiredRuns = 1;
+                            } else if (
+                                (
+                                    /^Fire scroll.+/.test(btnText) && isNextThingAMob() && getNextThingHP() > 100
+                                ) || (
+                                    /^Teleport scroll.+/.test(btnText) && isNextThingAMob() && getNextThingHP() > getCurrentHP() && getHPMissing() > 50
+                                ) || (
+                                    /^Health potion.+/.test(btnText) && getHPMissing() > 50 && sumMobsHP() >= getCurrentHP()
+                                )
+                            ) {
+                                doClick(el);
+                            }
                         }
-                    }
-                });
+                    });
+                }
             }
         }
 
