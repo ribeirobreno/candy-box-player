@@ -84,6 +84,10 @@
     function getNextThingHP() {
         return getNextThing().hp || 0;
     }
+    function getNextThingMaxHP() {
+        let thing = getNextThing();
+        return thing.max_hp || 0;
+    }
     function isNextThingAMob() {
         return getNextThing().type === 'mob';
     }
@@ -139,6 +143,7 @@
         return (100 * getHPFraction()).toFixed(3) + '% of ' + getMaxHP() +
             '<br>Quest: ' + (getCurrentQuest() + 1) +
             '/' + getTotalQuestsAvailable() +
+            '<br>Mobs HP: ' + sumMobsHP() +
             '<br>Runs left: ' + requiredRuns +
             '<br>Hut: ' + (100 * hutCounter / HUT_COUNTER_WAIT).toFixed(3) + '%';
     }
@@ -187,7 +192,7 @@
             if (
                 hasShop() &&
                 (
-                    potionCount('fireScroll') < 2 ||
+                    potionCount('fireScroll') < 20 ||
                     (
                         potionCount('impInvocationScroll') < 2 &&
                         hasMagicianHat()
@@ -233,9 +238,11 @@
                             requiredRuns = 1;
                         } else if (
                             (
-                                /^Fire scroll.+/.test(btnText) && isNextThingAMob() && getNextThingHP() > 70
+                                /^Fire scroll.+/.test(btnText) && isNextThingAMob() && getNextThingHP() > 100
                             ) || (
-                                /^Health potion.+/.test(btnText) && getHPMissing() > 50 && sumMobsHP() > getCurrentHP()
+                                /^Teleport scroll.+/.test(btnText) && isNextThingAMob() && getNextThingHP() > getCurrentHP() && getHPMissing() > 50
+                            ) || (
+                                /^Health potion.+/.test(btnText) && getHPMissing() > 50 && sumMobsHP() >= getCurrentHP()
                             )
                         ) {
                             doClick(el);
