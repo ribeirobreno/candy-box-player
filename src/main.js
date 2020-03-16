@@ -42,9 +42,20 @@
     function getThings() {
         return getQuestData().things || [];
     }
+    function sumMobsHP() {
+        const things = getThings();
+        let thing = {}, hp = 0;
+
+        for (thing of things) {
+            if (thing.type === 'mob') {
+                hp += (thing.hp || 0);
+            }
+        }
+
+        return hp;
+    }
     function isThingPresent(text, type) {
-        const things = getThings(),
-            t = things.length;
+        const things = getThings();
         let thing = {};
 
         for (thing of things) {
@@ -103,6 +114,9 @@
     }
     function getHPFraction() {
         return getCurrentHP() / getMaxHP();
+    }
+    function getHPMissing() {
+        return getMaxHP() - getCurrentHP();
     }
     function hasWeapon() {
         let sword = unsafeWindow.sword;
@@ -211,13 +225,18 @@
             if (isInQuest() && potionButtons && potionButtons.length) {
                 potionButtons.forEach((el) => {
                     if (!el.disabled) {
+                        let btnText = el.innerHTML;
                         if (
-                            /^Imp invocation scroll.+/.test(el.innerHTML) && isMobPresent('GHO') && !isAllyPresent('IMP')
+                            /^Imp invocation scroll.+/.test(btnText) && isMobPresent('GHO') && !isAllyPresent('IMP')
                         ) {
                             doClick(el);
                             requiredRuns = 1;
                         } else if (
-                            /^Fire scroll.+/.test(el.innerHTML) && isNextThingAMob() && getNextThingHP() > 140 && getHPFraction() < 0.5
+                            (
+                                /^Fire scroll.+/.test(btnText) && isNextThingAMob() && getNextThingHP() > 70
+                            ) || (
+                                /^Health potion.+/.test(btnText) && getHPMissing() > 50 && sumMobsHP() > getCurrentHP()
+                            )
                         ) {
                             doClick(el);
                         }
