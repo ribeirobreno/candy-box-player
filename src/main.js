@@ -3,15 +3,20 @@
 
     const RUNS_REF = 5,
         HUT_COUNTER_WAIT = 36000,
+        MAX_LOLLIPOPS_PLANTED = 17402,
         TIME_BETWEEN_ITERATIONS = 1000/60;
+
+    function getElById(id) {
+        return document.getElementById(id);
+    }
 
     var clicked = false,
         requiredRuns = RUNS_REF,
         hutCounter = HUT_COUNTER_WAIT,
         el = document.createElement('div'),
-        btn = document.getElementById('quest_button'),
-        dst = document.getElementById("quest_destination"),
-        eat = document.getElementById("eat");
+        btn = getElById('quest_button'),
+        dst = getElById('quest_destination'),
+        eat = getElById('eat');
 
     el.style = 'position:fixed;bottom:.5em;right:.5em;border:1px solid #080;background-color:#8F8;color:#030;padding:.125em .25em;text-align:center;font-family:SFMono-Regular,Consolas,"Liberation Mono",Menlo,monospace;';
     el.innerHTML = 'Soon!';
@@ -20,10 +25,14 @@
     function doClick(el) {
         el.dispatchEvent(new Event('click'));
     }
+    function isEnabled(el) {
+        return el && !el.disabled;
+    }
     function shouldHut() {
+        let lollipops = unsafeWindow.lollipops;
         if (
-            unsafeWindow.lollipops &&
-            unsafeWindow.lollipops.nbrOwned > 40000 &&
+            lollipops &&
+            lollipops.nbrOwned > 40000 &&
             hutCounter > 0
         ) {
             --hutCounter;
@@ -155,7 +164,7 @@
     }
 
     function loop() {
-        if (btn && dst && getCurrentQuest() > -1 && !btn.disabled && hasWeapon()) {
+        if (isEnabled(btn) && dst && getCurrentQuest() > -1 && hasWeapon()) {
             if (clicked) {
                 clicked = false;
                 if (getCurrentHP()) {
@@ -178,33 +187,40 @@
             clicked = true;
         } else {
             let buySword = document.querySelectorAll('#sword_with_button button'),
-                plant = document.getElementById('plant_1_lp'),
-                hut = document.getElementById('go_to_hut');
+                plant = getElById('plant_1_lp'),
+                hut = getElById('go_to_hut');
             if (buySword && buySword.length) {
                 buySword.forEach((el) => {
-                    if (!el.disabled) {
+                    if (isEnabled(el)) {
                         doClick(el);
                     }
                 });
             }
 
-            if (
-                hasShop() &&
-                (
-                    potionCount('fireScroll') < 20 ||
+            if (hasShop()) {
+                if (
+                    getLollipopsPlanted() >= MAX_LOLLIPOPS_PLANTED &&
                     (
-                        potionCount('impInvocationScroll') < 2 &&
-                        hasMagicianHat()
+                        potionCount('fireScroll') < 10 ||
+                        (
+                            potionCount('impInvocationScroll') < 2 &&
+                            hasMagicianHat()
+                        )
                     )
-                )
-            ) {
-                let buyScroll = document.getElementById('buy_scroll');
-                if (buyScroll && !buyScroll.disabled && getComputedStyle(buyScroll, null).getPropertyValue('visibility') !== 'hidden') {
-                    doClick(buyScroll);
+                ) {
+                    let buyScroll = getElById('buy_scroll');
+                    if (isEnabled(buyScroll) && getComputedStyle(buyScroll, null).getPropertyValue('visibility') !== 'hidden') {
+                        doClick(buyScroll);
+                    }
+                } else if ((getLollipopsPlanted() / MAX_LOLLIPOPS_PLANTED) < 0.6) {
+                    let buyLollipops = getElById('buy_10_lollipops');
+                    if (isEnabled(buyLollipops) && getComputedStyle(buyLollipops, null).getPropertyValue('visibility') !== 'hidden') {
+                        doClick(buyLollipops);
+                    }
                 }
             }
 
-            if (plant && !plant.disabled && getLollipopsPlanted() < 17402) {
+            if (isEnabled(plant) && getLollipopsPlanted() < MAX_LOLLIPOPS_PLANTED) {
                 doClick(plant);
             }
 
@@ -217,7 +233,7 @@
                 if (mapButtons && mapButtons.length) {
                     mapButtons.forEach((el) => {
                         if (
-                            !el.disabled &&
+                            isEnabled(el) &&
                             /^(Sword, better sword|Candies, faster candies) !.+/.test(el.innerHTML)
                         ) {
                             doClick(el);
@@ -234,7 +250,7 @@
                 let potionButtons = document.querySelectorAll('#quest_potions button');
                 if (potionButtons && potionButtons.length) {
                     potionButtons.forEach((el) => {
-                        if (!el.disabled) {
+                        if (isEnabled(el)) {
                             let btnText = el.innerHTML;
                             if (
                                 /^Imp invocation scroll.+/.test(btnText) && isMobPresent('GHO') && !isAllyPresent('IMP')
