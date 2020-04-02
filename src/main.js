@@ -9,10 +9,14 @@
     function getElById(id) {
         return document.getElementById(id);
     }
+    function getElementsBySelector(selector) {
+        return document.querySelectorAll(selector) || [];
+    }
 
     var clicked = false,
         requiredRuns = RUNS_REF,
         hutCounter = HUT_COUNTER_WAIT,
+        lastMobCount =  0,
         el = document.createElement('div'),
         btn = getElById('quest_button'),
         dst = getElById('quest_destination'),
@@ -27,6 +31,9 @@
     }
     function isEnabled(el) {
         return el && !el.disabled;
+    }
+    function hasVisibility(el) {
+        return el && getComputedStyle(el, null).getPropertyValue('visibility') !== 'hidden';
     }
     function shouldHut() {
         let lollipops = unsafeWindow.lollipops;
@@ -62,6 +69,18 @@
         }
 
         return hp;
+    }
+    function countMobs() {
+        const things = getThings();
+        let thing = {}, num = 0;
+
+        for (thing of things) {
+            if (thing.type === 'mob') {
+                ++num;
+            }
+        }
+
+        return num;
     }
     function isThingPresent(text, type) {
         const things = getThings();
@@ -152,7 +171,7 @@
         return (100 * getHPFraction()).toFixed(3) + '% of ' + getMaxHP() +
             '<br>Quest: ' + (getCurrentQuest() + 1) +
             '/' + getTotalQuestsAvailable() +
-            '<br>Mobs HP: ' + sumMobsHP() +
+            '<br>HP/Mobs: ' + sumMobsHP() + '/' + lastMobCount +
             '<br>Runs left: ' + requiredRuns +
             '<br>Hut: ' + (100 * hutCounter / HUT_COUNTER_WAIT).toFixed(3) + '%';
     }
@@ -164,7 +183,7 @@
     }
 
     function loop() {
-        if (isEnabled(btn) && dst && getCurrentQuest() > -1 && hasWeapon()) {
+        if (isEnabled(btn) && getCurrentQuest() > -1 && hasWeapon()) {
             if (clicked) {
                 clicked = false;
                 if (getCurrentHP()) {
@@ -186,16 +205,14 @@
             doClick(btn);
             clicked = true;
         } else {
-            let buySword = document.querySelectorAll('#sword_with_button button'),
+            let buySword = getElementsBySelector('#sword_with_button button'),
                 plant = getElById('plant_1_lp'),
                 hut = getElById('go_to_hut');
-            if (buySword && buySword.length) {
-                buySword.forEach((el) => {
-                    if (isEnabled(el)) {
-                        doClick(el);
-                    }
-                });
-            }
+            buySword.forEach((el) => {
+                if (isEnabled(el)) {
+                    doClick(el);
+                }
+            });
 
             if (hasShop()) {
                 if (
@@ -209,12 +226,12 @@
                     )
                 ) {
                     let buyScroll = getElById('buy_scroll');
-                    if (isEnabled(buyScroll) && getComputedStyle(buyScroll, null).getPropertyValue('visibility') !== 'hidden') {
+                    if (isEnabled(buyScroll) && hasVisibility(buyScroll)) {
                         doClick(buyScroll);
                     }
                 } else if ((getLollipopsPlanted() / MAX_LOLLIPOPS_PLANTED) < 0.6) {
                     let buyLollipops = getElById('buy_10_lollipops');
-                    if (isEnabled(buyLollipops) && getComputedStyle(buyLollipops, null).getPropertyValue('visibility') !== 'hidden') {
+                    if (isEnabled(buyLollipops) && hasVisibility(buyLollipops)) {
                         doClick(buyLollipops);
                     }
                 }
@@ -229,17 +246,15 @@
                     doClick(hut);
                 }
 
-                let mapButtons = document.querySelectorAll('#map button');
-                if (mapButtons && mapButtons.length) {
-                    mapButtons.forEach((el) => {
-                        if (
-                            isEnabled(el) &&
-                            /^(Sword, better sword|Candies, faster candies) !.+/.test(el.innerHTML)
-                        ) {
-                            doClick(el);
-                        }
-                    });
-                }
+                let mapButtons = getElementsBySelector('#map button');
+                mapButtons.forEach((el) => {
+                    if (
+                        isEnabled(el) &&
+                        /^(Sword, better sword|Candies, faster candies|Surpass yourself) .+/.test(el.innerHTML)
+                    ) {
+                        doClick(el);
+                    }
+                });
             }
 
             if (isInQuest()) {
@@ -247,30 +262,35 @@
                     doClick(eat);
                 }
 
-                let potionButtons = document.querySelectorAll('#quest_potions button');
-                if (potionButtons && potionButtons.length) {
-                    potionButtons.forEach((el) => {
-                        if (isEnabled(el)) {
-                            let btnText = el.innerHTML;
-                            if (
-                                /^Imp invocation scroll.+/.test(btnText) && isMobPresent('GHO') && !isAllyPresent('IMP')
-                            ) {
-                                doClick(el);
-                                requiredRuns = 1;
-                            } else if (
-                                (
-                                    /^Fire scroll.+/.test(btnText) && isNextThingAMob() && getNextThingHP() > 100
-                                ) || (
-                                    /^Teleport scroll.+/.test(btnText) && isNextThingAMob() && getNextThingHP() > getCurrentHP() && getHPMissing() > 50
-                                ) || (
-                                    /^Health potion.+/.test(btnText) && getHPMissing() > 50 && sumMobsHP() >= getCurrentHP()
-                                )
-                            ) {
-                                doClick(el);
-                            }
+                let currMobCount = countMobs(),
+                    potionButtons = getElementsBySelector('#quest_potions button');
+                potionButtons.forEach((el) => {
+                    if (isEnabled(el)) {
+                        let btnText = el.innerHTML;
+                        if (
+                            /^Imp invocation scroll.+/.test(btnText) && isMobPresent('GHO') && !isAllyPresent('IMP')
+                        ) {
+                            doClick(el);
+                            requiredRuns = 1;
+                        } else if (
+                            (
+                                /^Fire scroll.+/.test(btnText) && isNextThingAMob() && getNextThingHP() > 100
+                            ) || (
+                                currMobCount <= lastMobCount &&
+                                /^ Teleport scroll.+ /.test(btnText) &&
+                                isNextThingAMob() &&
+                                getNextThingHP() > getCurrentHP() &&
+                                getHPMissing() > 50
+                            ) || (
+                                /^Health potion.+/.test(btnText) && getHPMissing() > 50 && sumMobsHP() >= getCurrentHP()
+                            )
+                        ) {
+                            doClick(el);
                         }
-                    });
-                }
+                    }
+                });
+
+                lastMobCount = currMobCount;
             }
         }
 
