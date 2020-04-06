@@ -16,7 +16,8 @@
     var clicked = false,
         requiredRuns = RUNS_REF,
         hutCounter = HUT_COUNTER_WAIT,
-        lastMobCount =  0,
+        lastMobCount = 0,
+        loopEven = true,
         el = document.createElement('div'),
         btn = getElById('quest_button'),
         dst = getElById('quest_destination'),
@@ -183,6 +184,7 @@
     }
 
     function loop() {
+        loopEven = !loopEven;
         if (isEnabled(btn) && getCurrentQuest() > -1 && hasWeapon()) {
             if (clicked) {
                 clicked = false;
@@ -282,7 +284,13 @@
                                 getNextThingHP() > getCurrentHP() &&
                                 getHPMissing() > 50
                             ) || (
-                                /^Health potion.+/.test(btnText) && getHPMissing() > 50 && sumMobsHP() >= getCurrentHP()
+                                loopEven && /^Health potion.+/.test(btnText) && getHPMissing() > 50 && sumMobsHP() >= getCurrentHP()
+                            ) || (
+                                /^Major health potion.+/.test(btnText) && getHPMissing() > 100 && sumMobsHP() >= getCurrentHP()
+                            ) || (
+                                /^Invulnerability potion.+/.test(btnText) && isMobPresent('CGG')
+                            ) || (
+                                currMobCount > 2 && /^Earthquake scroll.+/.test(btnText) && isMobPresent('CGG')
                             )
                         ) {
                             doClick(el);
@@ -292,6 +300,7 @@
 
                 lastMobCount = currMobCount;
             }
+
         }
 
         if (dst && getCurrentQuest() < 0) {
