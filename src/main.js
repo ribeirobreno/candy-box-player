@@ -18,6 +18,8 @@
         hutCounter = HUT_COUNTER_WAIT,
         lastMobCount = 0,
         loopEven = true,
+        mixTime = 0,
+        potionDone = false,
         el = document.createElement('div'),
         btn = getElById('quest_button'),
         dst = getElById('quest_destination'),
@@ -167,6 +169,26 @@
         let farm = unsafeWindow.farm;
         return (farm && farm.lollipopsPlanted) ? farm.lollipopsPlanted : 0;
     }
+    function getCandiesOwned() {
+        let candies = unsafeWindow.candies;
+        return (candies && candies.nbrOwned) ? candies.nbrOwned : 0;
+    }
+    function getCauldronData() {
+        return unsafeWindow.cauldron;
+    }
+    function isCooking() {
+        let cauldron = getCauldronData();
+        return cauldron && (
+            cauldron.weAreMixing ||
+            cauldron.weAreBoiling ||
+            cauldron.candiesInTheCauldron > 0 ||
+            cauldron.lollipopsInTheCauldron > 0
+        );
+    }
+    function isMixing() {
+        let cauldron = getCauldronData();
+        return cauldron && cauldron.weAreMixing;
+    }
 
     function createPanelHTML() {
         return (100 * getHPFraction()).toFixed(3) + '% of ' + getMaxHP() +
@@ -209,7 +231,8 @@
         } else {
             let buySword = getElementsBySelector('#sword_with_button button'),
                 plant = getElById('plant_1_lp'),
-                hut = getElById('go_to_hut');
+                hut = getElById('go_to_hut'),
+                cauldronCandies = getElById('cauldron_candies_quantity');
             buySword.forEach((el) => {
                 if (isEnabled(el)) {
                     doClick(el);
@@ -278,17 +301,25 @@
                             (
                                 /^Fire scroll.+/.test(btnText) && isNextThingAMob() && getNextThingHP() > 100
                             ) || (
-                                currMobCount <= lastMobCount &&
+                                (
+                                    (
+                                        currMobCount <= lastMobCount &&
+                                        isNextThingAMob() &&
+                                        getNextThingHP() > getCurrentHP()
+                                    ) || (
+                                        currMobCount > 2 &&
+                                        getQuestData().getCharacterIndex() > 3 &&
+                                        isMobPresent('CGG')
+                                    )
+                                ) &&
                                 /^ Teleport scroll.+ /.test(btnText) &&
-                                isNextThingAMob() &&
-                                getNextThingHP() > getCurrentHP() &&
                                 getHPMissing() > 50
                             ) || (
                                 loopEven && /^Health potion.+/.test(btnText) && getHPMissing() > 50 && sumMobsHP() >= getCurrentHP()
                             ) || (
                                 /^Major health potion.+/.test(btnText) && getHPMissing() > 100 && sumMobsHP() >= getCurrentHP()
                             ) || (
-                                /^Invulnerability potion.+/.test(btnText) && isMobPresent('CGG')
+                                /^Invulnerability potion.+/.test(btnText) && isMobPresent('CGG') && isNextThingAMob()
                             ) || (
                                 currMobCount > 2 && /^Earthquake scroll.+/.test(btnText) && isMobPresent('CGG')
                             )
@@ -301,6 +332,36 @@
                 lastMobCount = currMobCount;
             }
 
+            if (potionDone) {
+                let toBottle = getElById('cauldron_put_into_bottles');
+                if (isEnabled(toBottle)) {
+                    doClick(toBottle);
+                    potionDone = false;
+                }
+            } else if (isCooking()) {
+                let mix = getElById('cauldron_mix');
+
+                if (isMixing() && Date.now() >= mixTime) {
+                    let stop = getElById('cauldron_stop');
+                    if (isEnabled(stop)) {
+                        doClick(stop);
+                        mixTime = 0;
+                        potionDone = true;
+                    }
+                } else if (isEnabled(mix)) {
+                    doClick(mix);
+                }
+            } else if (cauldronCandies) {
+                if (potionCount('health') < 10) {
+                    cauldronCandies.value = ((getCandiesOwned() / 100) | 0) * 100;
+                    doClick(getElementsBySelector('#cauldron_actions_put button')[0]);
+                    mixTime = Date.now() + 15000;
+                } else if (potionCount('invulnerability') < 2) {
+                    cauldronCandies.value = ((getCandiesOwned() / 2000) | 0) * 2000;
+                    doClick(getElementsBySelector('#cauldron_actions_put button')[0]);
+                    mixTime = Date.now() + 60000;
+                }
+            }
         }
 
         if (dst && getCurrentQuest() < 0) {
