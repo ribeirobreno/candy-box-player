@@ -20,6 +20,7 @@
         loopEven = true,
         mixTime = 0,
         potionDone = false,
+        statusBar = 'Initialized',
         el = document.createElement('div'),
         btn = getElById('quest_button'),
         dst = getElById('quest_destination'),
@@ -54,6 +55,10 @@
     }
     function getQuestData() {
         return unsafeWindow.quest;
+    }
+    function getCharPosition() {
+        let quest = getQuestData();
+        return quest.getCharacterIndex ? quest.getCharacterIndex() : 0;
     }
     function isInQuest() {
         return getQuestData().weAreQuestingRightNow || false;
@@ -108,7 +113,7 @@
     }
     function getNextThing() {
         let things = getThings(),
-            nextInd = getQuestData().getCharacterIndex() + 1;
+            nextInd = getCharPosition() + 1;
 
         return things.length > nextInd ? things[nextInd] : {};
     }
@@ -138,7 +143,7 @@
         return dst ? dst.selectedIndex : -1;
     }
     function getCharData() {
-        return getThings()[getQuestData().getCharacterIndex()];
+        return getThings()[getCharPosition()];
     }
     function getCurrentHP() {
         let data = getCharData();
@@ -195,8 +200,10 @@
             '<br>Quest: ' + (getCurrentQuest() + 1) +
             '/' + getTotalQuestsAvailable() +
             '<br>HP/Mobs: ' + sumMobsHP() + '/' + lastMobCount +
+            '<br>Pos: ' + (100 * getCharPosition() / (getThings().length - 1)).toFixed(3) + '%' +
             '<br>Runs left: ' + requiredRuns +
-            '<br>Hut: ' + (100 * hutCounter / HUT_COUNTER_WAIT).toFixed(3) + '%';
+            '<br>Hut: ' + (100 * hutCounter / HUT_COUNTER_WAIT).toFixed(3) + '%' +
+            '<br>' + statusBar;
     }
 
     function draw() {
@@ -226,6 +233,7 @@
                 }
             }
 
+            //statusBar = 'Started quest: ' + (getCurrentQuest() + 1);
             doClick(btn);
             clicked = true;
         } else {
@@ -235,6 +243,7 @@
                 cauldronCandies = getElById('cauldron_candies_quantity');
             buySword.forEach((el) => {
                 if (isEnabled(el)) {
+                    statusBar = el.innerText;
                     doClick(el);
                 }
             });
@@ -252,11 +261,13 @@
                 ) {
                     let buyScroll = getElById('buy_scroll');
                     if (isEnabled(buyScroll) && hasVisibility(buyScroll)) {
+                        statusBar = buyScroll.innerText;
                         doClick(buyScroll);
                     }
                 } else if ((getLollipopsPlanted() / MAX_LOLLIPOPS_PLANTED) < 0.6) {
                     let buyLollipops = getElById('buy_10_lollipops');
                     if (isEnabled(buyLollipops) && hasVisibility(buyLollipops)) {
+                        statusBar = buyLollipops.innerText;
                         doClick(buyLollipops);
                     }
                 }
@@ -277,6 +288,7 @@
                         isEnabled(el) &&
                         /^(Sword, better sword|Candies, faster candies|Surpass yourself) .+/.test(el.innerHTML)
                     ) {
+                        statusBar = 'Buy: ' + el.innerText;
                         doClick(el);
                     }
                 });
@@ -284,6 +296,7 @@
 
             if (isInQuest()) {
                 if (eat && isNextThingAMob() && getNextThingMaxHP() > getMaxHP()) {
+                    statusBar = 'Ate ~' + getCandiesOwned() + ' candies';
                     doClick(eat);
                 }
 
@@ -295,6 +308,7 @@
                         if (
                             /^Imp invocation scroll.+/.test(btnText) && isMobPresent('GHO') && !isAllyPresent('IMP')
                         ) {
+                            statusBar = btnText;
                             doClick(el);
                             requiredRuns = 1;
                         } else if (
@@ -308,7 +322,7 @@
                                         getNextThingHP() > getCurrentHP()
                                     ) || (
                                         currMobCount > 2 &&
-                                        getQuestData().getCharacterIndex() > 3 &&
+                                        getCharPosition() > 3 &&
                                         isMobPresent('CGG')
                                     )
                                 ) &&
@@ -324,6 +338,7 @@
                                 currMobCount > 2 && /^Earthquake scroll.+/.test(btnText) && isMobPresent('CGG')
                             )
                         ) {
+                            statusBar = btnText;
                             doClick(el);
                         }
                     }
@@ -356,10 +371,12 @@
                     cauldronCandies.value = ((getCandiesOwned() / 100) | 0) * 100;
                     doClick(getElementsBySelector('#cauldron_actions_put button')[0]);
                     mixTime = Date.now() + 15000;
+                    statusBar = 'Cook HP potions until ' + mixTime;
                 } else if (potionCount('invulnerability') < 2) {
                     cauldronCandies.value = ((getCandiesOwned() / 2000) | 0) * 2000;
                     doClick(getElementsBySelector('#cauldron_actions_put button')[0]);
                     mixTime = Date.now() + 60000;
+                    statusBar = 'Cook Invulnerability potions until ' + mixTime;
                 }
             }
         }
