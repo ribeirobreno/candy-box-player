@@ -6,7 +6,8 @@
         MAX_LOLLIPOPS_PLANTED = 17402,
         TIME_BETWEEN_ITERATIONS = 1000 / 60,
         MIN_HP_POTIONS = 10,
-        MIN_INV_POTIONS = 2;
+        MIN_INV_POTIONS = 2,
+        MIN_TUR_POTIONS = 1;
 
     function getElById(id) {
         return document.getElementById(id);
@@ -25,6 +26,7 @@
         requiredRuns = RUNS_REF,
         hutCounter = HUT_COUNTER_WAIT,
         lastMobCount = 0,
+        lastCandiesFound = 0,
         loopEven = true,
         mixTime = 0,
         potionDone = false,
@@ -208,7 +210,7 @@
             '<br>Quest: ' + (getCurrentQuest() + 1) +
             '/' + getTotalQuestsAvailable() +
             '<br>HP/Mobs: ' + sumMobsHP() + '/' + lastMobCount +
-            '<br>Pos: ' + (100 * getCharPosition() / (getThings().length - 1)).toFixed(3) + '%' +
+            '<br>Pos: ' + getCharPosition() + '/' + getThings().length +
             '<br>Runs left: ' + requiredRuns +
             '<br>Hut: ' + (100 * hutCounter / HUT_COUNTER_WAIT).toFixed(3) + '%' +
             '<br>' + statusBar;
@@ -227,7 +229,7 @@
                 clicked = false;
                 if (getCurrentHP()) {
                     if (getTotalQuestsAvailable() > (getCurrentQuest() + 1)) {
-                        if (--requiredRuns < 1) {
+                        if (--requiredRuns < 1 || lastCandiesFound <= 0) {
                             requiredRuns = RUNS_REF;
                             ++dst.selectedIndex;
                         }
@@ -303,6 +305,8 @@
             }
 
             if (isInQuest()) {
+                lastCandiesFound = getQuestData().candiesFound;
+
                 if (eat && isNextThingAMob() && getNextThingMaxHP() > getMaxHP()) {
                     statusBar = 'Ate ~' + getCandiesOwned() + ' candies';
                     doClick(eat);
@@ -314,13 +318,9 @@
                     if (isEnabled(el)) {
                         let btnText = el.innerHTML;
                         if (
-                            /^Imp invocation scroll.+/.test(btnText) && isMobPresent('GHO') && !isAllyPresent('IMP')
-                        ) {
-                            statusBar = btnText;
-                            doClick(el);
-                            requiredRuns = 1;
-                        } else if (
                             (
+                                /^Imp invocation scroll.+/.test(btnText) && isMobPresent('GHO') && !isAllyPresent('IMP')
+                            ) || (
                                 /^Fire scroll.+/.test(btnText) && isNextThingAMob() && getNextThingHP() > 100
                             ) || (
                                 (
@@ -344,6 +344,8 @@
                                 /^Invulnerability potion.+/.test(btnText) && isMobPresent('CGG') && isNextThingAMob()
                             ) || (
                                 currMobCount > 2 && /^Earthquake scroll.+/.test(btnText) && isMobPresent('CGG')
+                            ) || (
+                                currMobCount > 2 && /^Turtle potion.+/.test(btnText) && !getQuestData().turtle && isMobPresent('CGG')
                             )
                         ) {
                             statusBar = btnText;
@@ -355,7 +357,10 @@
                 lastMobCount = currMobCount;
             }
 
-            if (potionCount('health') < MIN_HP_POTIONS || potionCount('invulnerability') < MIN_INV_POTIONS) {
+            if (
+                potionCount('health') < MIN_HP_POTIONS
+                || potionCount('invulnerability') < MIN_INV_POTIONS
+            ) {
                 if (potionDone) {
                     let toBottle = getElById('cauldron_put_into_bottles');
                     if (isEnabled(toBottle)) {
