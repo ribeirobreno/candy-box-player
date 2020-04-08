@@ -6,8 +6,8 @@
         MAX_LOLLIPOPS_PLANTED = 17402,
         TIME_BETWEEN_ITERATIONS = 1000 / 60,
         MIN_HP_POTIONS = 10,
-        MIN_INV_POTIONS = 2,
-        MIN_TUR_POTIONS = 1;
+        MIN_INV_POTIONS = 1,
+        MIN_TUR_POTIONS = 3;
 
     function getElById(id) {
         return document.getElementById(id);
@@ -229,10 +229,14 @@
                 clicked = false;
                 if (getCurrentHP()) {
                     if (getTotalQuestsAvailable() > (getCurrentQuest() + 1)) {
-                        if (--requiredRuns < 1 || lastCandiesFound <= 0) {
+                        --requiredRuns;
+                        if (requiredRuns < 1 || lastCandiesFound <= 0) {
                             requiredRuns = RUNS_REF;
                             ++dst.selectedIndex;
                         }
+                    } else if (getTotalQuestsAvailable() > 1 && lastCandiesFound <= 0) {
+                        requiredRuns = RUNS_REF;
+                        dst.selectedIndex = 0;
                     }
                 } else if (getCurrentQuest() > 0) {
                     dst.selectedIndex = 0;
