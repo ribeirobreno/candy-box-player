@@ -4,13 +4,21 @@
     const RUNS_REF = 5,
         HUT_COUNTER_WAIT = 36000,
         MAX_LOLLIPOPS_PLANTED = 17402,
-        TIME_BETWEEN_ITERATIONS = 1000/60;
+        TIME_BETWEEN_ITERATIONS = 1000 / 60,
+        MIN_HP_POTIONS = 10,
+        MIN_INV_POTIONS = 2;
 
     function getElById(id) {
         return document.getElementById(id);
     }
     function getElementsBySelector(selector) {
         return document.querySelectorAll(selector) || [];
+    }
+    function truncateToNearestMult(num, multipleOf) {
+        return ((num / multipleOf) | 0) * multipleOf;
+    }
+    function getRelativeTimestamp(diff) {
+        return Date.now() + diff;
     }
 
     var clicked = false,
@@ -21,14 +29,14 @@
         mixTime = 0,
         potionDone = false,
         statusBar = 'Initialized',
-        el = document.createElement('div'),
+        panel = document.createElement('div'),
         btn = getElById('quest_button'),
         dst = getElById('quest_destination'),
         eat = getElById('eat');
 
-    el.style = 'position:fixed;bottom:.5em;right:.5em;border:1px solid #080;background-color:#8F8;color:#030;padding:.125em .25em;text-align:center;font-family:SFMono-Regular,Consolas,"Liberation Mono",Menlo,monospace;';
-    el.innerHTML = 'Soon!';
-    document.body.appendChild(el);
+    panel.style = 'position:fixed;bottom:.5em;right:.5em;border:1px solid #080;background-color:#8F8;color:#030;padding:.125em .25em;text-align:center;font-family:SFMono-Regular,Consolas,"Liberation Mono",Menlo,monospace;';
+    panel.innerHTML = 'Soon!';
+    document.body.appendChild(panel);
 
     function doClick(el) {
         el.dispatchEvent(new Event('click'));
@@ -54,11 +62,11 @@
         return hutCounter < 1;
     }
     function getQuestData() {
-        return unsafeWindow.quest;
+        return unsafeWindow.quest || {};
     }
     function getCharPosition() {
         let quest = getQuestData();
-        return quest.getCharacterIndex ? quest.getCharacterIndex() : 0;
+        return quest.getCharacterIndex ? (quest.getCharacterIndex() || 0) : 0;
     }
     function isInQuest() {
         return getQuestData().weAreQuestingRightNow || false;
@@ -207,7 +215,7 @@
     }
 
     function draw() {
-        el.innerHTML = createPanelHTML();
+        panel.innerHTML = createPanelHTML();
 
         requestAnimationFrame(draw);
     }
@@ -347,36 +355,41 @@
                 lastMobCount = currMobCount;
             }
 
-            if (potionDone) {
-                let toBottle = getElById('cauldron_put_into_bottles');
-                if (isEnabled(toBottle)) {
-                    doClick(toBottle);
-                    potionDone = false;
-                }
-            } else if (isCooking()) {
-                let mix = getElById('cauldron_mix');
-
-                if (isMixing() && Date.now() >= mixTime) {
-                    let stop = getElById('cauldron_stop');
-                    if (isEnabled(stop)) {
-                        doClick(stop);
-                        mixTime = 0;
-                        potionDone = true;
+            if (potionCount('health') < MIN_HP_POTIONS || potionCount('invulnerability') < MIN_INV_POTIONS) {
+                if (potionDone) {
+                    let toBottle = getElById('cauldron_put_into_bottles');
+                    if (isEnabled(toBottle)) {
+                        doClick(toBottle);
+                        potionDone = false;
                     }
-                } else if (isEnabled(mix)) {
-                    doClick(mix);
-                }
-            } else if (cauldronCandies) {
-                if (potionCount('health') < 10) {
-                    cauldronCandies.value = ((getCandiesOwned() / 100) | 0) * 100;
-                    doClick(getElementsBySelector('#cauldron_actions_put button')[0]);
-                    mixTime = Date.now() + 15000;
-                    statusBar = 'Cook HP potions until ' + mixTime;
-                } else if (potionCount('invulnerability') < 2) {
-                    cauldronCandies.value = ((getCandiesOwned() / 2000) | 0) * 2000;
-                    doClick(getElementsBySelector('#cauldron_actions_put button')[0]);
-                    mixTime = Date.now() + 60000;
-                    statusBar = 'Cook Invulnerability potions until ' + mixTime;
+                } else if (isCooking()) {
+                    let mix = getElById('cauldron_mix');
+
+                    if (isMixing() && Date.now() >= mixTime) {
+                        let stop = getElById('cauldron_stop');
+                        if (isEnabled(stop)) {
+                            doClick(stop);
+                            mixTime = 0;
+                            potionDone = true;
+                        }
+                    } else if (isEnabled(mix)) {
+                        doClick(mix);
+                    }
+                } else if (cauldronCandies) {
+                    function putInCauldron(candies) {
+                        cauldronCandies.value = candies;
+                        doClick(getElementsBySelector('#cauldron_actions_put button')[0]);
+                    }
+
+                    if (potionCount('health') < MIN_HP_POTIONS) {
+                        putInCauldron(truncateToNearestMult(getCandiesOwned(), 100));
+                        mixTime = getRelativeTimestamp(15000);
+                        statusBar = 'Cook HP potions until ' + mixTime;
+                    } else if (potionCount('invulnerability') < MIN_INV_POTIONS) {
+                        putInCauldron(truncateToNearestMult(getCandiesOwned(), 2000));
+                        mixTime = getRelativeTimestamp(60000);
+                        statusBar = 'Cook Invulnerability potions until ' + mixTime;
+                    }
                 }
             }
         }
