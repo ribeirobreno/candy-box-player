@@ -7,11 +7,17 @@ jobs:
             - checkout
             - run: npm install
             - run: npm run production
-            - run: git config user.email "ribeiro.breno@gmail.com"
-            - run: git config user.name "Circle CI build"
-            - run: git add .
-            - run: git commit -m '[skip ci] Update userscript build - CircleCI'
-            - run: git push -q
+            - run:
+              command: |
+                if [[ ! -z $(git status --untracked-files=no --porcelain) ]]; then
+                  git config user.email "ribeiro.breno@gmail.com"
+                  git config user.name "Circle CI build"
+                  git add .
+                  git commit -m '[skip ci] Update userscript build - CircleCI'
+                  git push -q
+                else
+                  echo "Nothing to commit!"
+                fi
 workflows:
     build-release:
         jobs:
